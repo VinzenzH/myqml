@@ -31,6 +31,7 @@ from .frepresentations import fgenerate_local_coulomb_matrix
 from .frepresentations import fgenerate_atomic_coulomb_matrix
 from .frepresentations import fgenerate_eigenvalue_coulomb_matrix
 from .frepresentations import fgenerate_bob
+from .frepresentations import fgenerate_distance_bob
 
 from qml.utils import NUCLEAR_CHARGE
 
