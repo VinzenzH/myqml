@@ -137,8 +137,8 @@ def setup_pepytools():
 
     setup(
 
-        name="qml",
-        packages=['qml'],
+        name="myqml",
+        packages=['myqml'],
 
         # metadata
         version=__version__,
@@ -153,7 +153,7 @@ def setup_pepytools():
 
         # set up package contents
 
-        ext_package = 'qml',
+        ext_package = 'myqml',
         ext_modules = [
               ext_ffchl_module,
               ext_farad_kernels,
