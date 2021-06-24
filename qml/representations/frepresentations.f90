@@ -1595,7 +1595,7 @@ subroutine fgenerate_morse_bob(atomic_charges, coordinates, nuclear_charges, id,
     do i = 1, natoms
         do j = i+1, natoms
             pair_norm = atomic_charges(i) * atomic_charges(j) &
-                & * 1 * (1 - np.exp(- 1 * (sqrt(sum((coordinates(j,:) - coordinates(i,:)))**2) - 1)) ** 2 - 1)
+                & * 1 * (1 - exp(- 1 * (sqrt(sum((coordinates(j,:) - coordinates(i,:)))**2) - 1)) ** 2 - 1)
 
             pair_distance_matrix(i, j) = pair_norm
             pair_distance_matrix(j, i) = pair_norm
