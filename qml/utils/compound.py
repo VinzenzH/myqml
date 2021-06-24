@@ -28,7 +28,7 @@ import collections
 
 from ..utils import NUCLEAR_CHARGE
 
-from ..representations import generate_coulomb_matrix
+from ..representations import generate_full_coulomb_matrix
 from ..representations import generate_atomic_coulomb_matrix
 from ..representations import generate_bob
 from ..representations import generate_distance_bob
@@ -74,7 +74,7 @@ class Compound(object):
         if xyz is not None:
             self.read_xyz(xyz)
 
-    def generate_coulomb_matrix(self, size = 23, sorting = "row-norm", indices = None):
+    def generate_full_coulomb_matrix(self, size = 23, sorting = "row-norm", indices = None):
         """ Creates a Coulomb Matrix representation of a molecule.
             A matrix :math:`M` is constructed with elements
 
@@ -105,7 +105,7 @@ class Compound(object):
             :rtype: numpy array
         """
 
-        self.representation = generate_coulomb_matrix(self.nuclear_charges, 
+        self.representation = generate_full_coulomb_matrix(self.nuclear_charges, 
             self.coordinates, size = size, sorting = sorting)
 
     def generate_eigenvalue_coulomb_matrix(self, size = 23):
