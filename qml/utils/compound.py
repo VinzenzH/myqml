@@ -141,7 +141,7 @@ class Compound(object):
             :rtype: numpy array
         """
 
-        self.representation = generate_full_coulomb_matrix(self.nuclear_charges, 
+        self.representation = generate_triup_coulomb_matrix(self.nuclear_charges, 
             self.coordinates, size = size, sorting = sorting)
 
     def generate_eigenvalue_coulomb_matrix(self, size = 23):
