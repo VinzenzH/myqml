@@ -26,7 +26,7 @@ import numpy as np
 import itertools as itl
 
 from .frepresentations import fgenerate_coulomb_matrix
-from .frepresentations import fgenerate_full_coulomb_matrix
+from .frepresentations import fgenerate_triup_coulomb_matrix
 from .frepresentations import fgenerate_unsorted_coulomb_matrix
 from .frepresentations import fgenerate_local_coulomb_matrix
 from .frepresentations import fgenerate_atomic_coulomb_matrix
@@ -124,7 +124,7 @@ def generate_coulomb_matrix(nuclear_charges, coordinates, size = 23, sorting = "
         print("ERROR: Unknown sorting scheme requested")
         raise SystemExit
         
-def generate_full_coulomb_matrix(nuclear_charges, coordinates, size = 23, sorting = "row-norm"):
+def generate_triup_coulomb_matrix(nuclear_charges, coordinates, size = 23, sorting = "row-norm"):
     """ Creates a Coulomb Matrix representation of a molecule.
         Sorting of the elements can either be done by ``sorting="row-norm"`` or ``sorting="unsorted"``.
         A matrix :math:`M` is constructed with elements
@@ -165,7 +165,7 @@ def generate_full_coulomb_matrix(nuclear_charges, coordinates, size = 23, sortin
     """
 
     if (sorting == "row-norm"):
-        return fgenerate_full_coulomb_matrix(nuclear_charges, \
+        return fgenerate_triup_coulomb_matrix(nuclear_charges, \
             coordinates, size)
 
     elif (sorting == "unsorted"):
