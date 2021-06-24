@@ -150,7 +150,7 @@ def setup_qml():
 
     setup(
 
-        name="myqml",
+        name="qml",
         packages=[
             'qml',
             'qml.aglaia',
@@ -178,7 +178,7 @@ def setup_qml():
 
         # set up package contents
 
-        ext_package = 'myqml',
+        ext_package = 'qml',
         ext_modules = [
               ext_ffchl_module,
               ext_fkernels,
