@@ -145,7 +145,7 @@ subroutine fgenerate_full_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
 
     integer, intent(in) :: nmax
 
-    double precision, dimension(((nmax + 1) * nmax) / 2), intent(out):: cm
+    double precision, dimension(nmax), intent(out):: cm
 
     double precision, allocatable, dimension(:) :: row_norms
     double precision :: pair_norm
@@ -212,7 +212,7 @@ subroutine fgenerate_full_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
     !$OMP PARALLEL DO PRIVATE(idx, i, j)
     do m = 1, natoms
         i = sorted_atoms(m)
-        idx = m
+        idx = (m*m+m)/2 - m
         do n = 1, m
             j = sorted_atoms(n)
             cm(idx+n) = pair_distance_matrix(i, j)
