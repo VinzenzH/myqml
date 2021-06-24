@@ -1515,3 +1515,190 @@ subroutine fgenerate_inv_six_bob(atomic_charges, coordinates, nuclear_charges, i
     deallocate(start_indices)
 
 end subroutine fgenerate_inv_six_bob
+
+
+subroutine fgenerate_morse_bob(atomic_charges, coordinates, nuclear_charges, id, &
+    & nmax, ncm, cm)
+
+    use representations, only: get_indices
+    implicit none
+
+    double precision, dimension(:), intent(in) :: atomic_charges
+    double precision, dimension(:,:), intent(in) :: coordinates
+    integer, dimension(:), intent(in) :: nuclear_charges
+    integer, dimension(:), intent(in) :: id
+    integer, dimension(:), intent(in) :: nmax
+    integer, intent(in) :: ncm
+
+    double precision, dimension(ncm), intent(out):: cm
+
+    integer :: n, i, j, k, l, idx1, idx2, nid, nbag
+    integer :: natoms, natoms1, natoms2, type1, type2
+
+    integer, allocatable, dimension(:) :: type1_indices
+    integer, allocatable, dimension(:) :: type2_indices
+    integer, allocatable, dimension(:) :: start_indices
+
+
+    double precision :: pair_norm
+    double precision :: huge_double
+
+    double precision, allocatable, dimension(:) :: bag
+    double precision, allocatable, dimension(:,:) :: pair_distance_matrix
+
+
+    if (size(coordinates, dim=1) /= size(atomic_charges, dim=1)) then
+        write(*,*) "ERROR: Bag of Bonds generation"
+        write(*,*) size(coordinates, dim=1), "coordinates, but", &
+            & size(atomic_charges, dim=1), "atom_types!"
+        stop
+    else if (size(coordinates, dim=1) /= size(nuclear_charges, dim=1)) then
+        write(*,*) "ERROR: Coulomb matrix generation"
+        write(*,*) size(coordinates, dim=1), "coordinates, but", &
+            & size(nuclear_charges, dim=1), "atom_types!"
+        stop
+    else
+        natoms = size(atomic_charges, dim=1)
+    endif
+
+    if (size(id, dim=1) /= size(nmax, dim=1)) then
+        write(*,*) "ERROR: Bag of Bonds generation"
+        write(*,*) size(id, dim=1), "unique atom types, but", &
+            & size(nmax, dim=1), "max size!"
+        stop
+    else
+        nid = size(id, dim=1)
+    endif
+
+    n = 0
+    !$OMP PARALLEL DO REDUCTION(+:n)
+    do i = 1, nid
+        n = n + nmax(i) * (1 + nmax(i))
+        do j = 1, i - 1
+            n = n + 2 * nmax(i) * nmax(j)
+        enddo
+    enddo
+    !$OMP END PARALLEL DO
+
+    if (n /= 2*ncm) then
+        write(*,*) "ERROR: Bag of Bonds generation"
+        write(*,*) "Inferred vector size", n, "but given size", ncm
+        stop
+    endif
+
+    ! Allocate temporary
+    allocate(pair_distance_matrix(natoms,natoms))
+    huge_double = huge(pair_distance_matrix(1,1))
+
+
+    !$OMP PARALLEL DO PRIVATE(pair_norm)
+    do i = 1, natoms
+        do j = i+1, natoms
+            pair_norm = atomic_charges(i) * atomic_charges(j) &
+                & * 1 * (1 - np.exp(- 1 * (sqrt(sum((coordinates(j,:) - coordinates(i,:))**2) - 1)) ** 2 - 1)
+
+            pair_distance_matrix(i, j) = pair_norm
+            pair_distance_matrix(j, i) = pair_norm
+        enddo
+    enddo
+    !$OMP END PARALLEL DO
+
+    ! Allocate temporary
+    ! Too large but easier
+    allocate(type1_indices(maxval(nmax, dim=1)))
+    allocate(type2_indices(maxval(nmax, dim=1)))
+
+    ! Get max bag size
+    nbag = 0
+    do i = 1, nid
+        nbag = max(n, (nmax(i) * (nmax(i) - 1))/2)
+        do j = 1, i - 1
+            nbag = max(n, nmax(i) * nmax(j))
+        enddo
+    enddo
+
+    ! Allocate temporary
+    ! Too large but easier
+    allocate(bag(nbag))
+    allocate(start_indices(nid))
+
+    ! get start indices
+    start_indices(1) = 0
+    do i = 2, nid
+        start_indices(i) = (nmax(i-1) * (nmax(i-1) + 1)) / 2 + start_indices(i-1)
+        do j = i, nid
+            start_indices(i) = start_indices(i) + nmax(j) * nmax(i-1)
+        enddo
+    enddo
+
+    cm = 0.0d0
+
+    !$OMP PARALLEL DO PRIVATE(type1, type1_indices, l, &
+    !$OMP& bag, natoms1, idx1, idx2, k, nbag, type2, natoms2, type2_indices)
+    do i = 1, nid
+        type1 = id(i)
+        natoms1 = 0
+
+        call get_indices(natoms, nuclear_charges, type1, natoms1, type1_indices)
+
+        bag = 0.0d0
+
+        do j = 1, natoms1
+            idx1 = type1_indices(j)
+            cm(start_indices(i) + j) = 0.5d0 * atomic_charges(idx1) ** 2.4d0
+            k = (j * j - 3 * j) / 2
+            do l = 1, j - 1
+                idx2 = type1_indices(l)
+                bag(k + l + 1) = pair_distance_matrix(idx1, idx2)
+            enddo
+        enddo
+
+        start_indices(i) = start_indices(i) + nmax(i)
+
+        nbag = (nmax(i) * nmax(i) - nmax(i)) / 2
+        ! sort
+        do j = 1, nbag
+            k = minloc(bag(:nbag), dim=1)
+            cm(start_indices(i) + nbag - j + 1) = bag(k)
+            bag(k) = huge_double
+        enddo
+
+        start_indices(i) = start_indices(i) + nbag
+
+        do j = i + 1, nid
+            type2 = id(j)
+            natoms2 = 0
+
+            call get_indices(natoms, nuclear_charges, type2, natoms2, type2_indices)
+
+            bag = 0.0d0
+
+            do k = 1, natoms1
+                idx1 = type1_indices(k)
+                do l = 1, natoms2
+                    idx2 = type2_indices(l)
+                    bag(natoms2 * (k - 1) + l) = pair_distance_matrix(idx1, idx2)
+                enddo
+            enddo
+
+            ! sort
+            nbag = nmax(i) * nmax(j)
+            do k = 1, nbag
+                l = minloc(bag(:nbag), dim=1)
+                cm(start_indices(i) + nbag - k + 1) = bag(l)
+                bag(l) = huge_double
+            enddo
+
+            start_indices(i) = start_indices(i) + nbag
+        enddo
+    enddo
+    !$OMP END PARALLEL DO
+
+    ! Clean up
+    deallocate(pair_distance_matrix)
+    deallocate(bag)
+    deallocate(type1_indices)
+    deallocate(type2_indices)
+    deallocate(start_indices)
+
+end subroutine fgenerate_morse_bob
