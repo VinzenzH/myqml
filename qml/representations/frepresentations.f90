@@ -136,7 +136,7 @@ subroutine fgenerate_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
     deallocate(sorted_atoms)
 end subroutine fgenerate_coulomb_matrix
 
-subroutine fgenerate_full_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
+subroutine fgenerate_triup_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
 
     implicit none
 
@@ -224,7 +224,7 @@ subroutine fgenerate_full_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
     deallocate(pair_distance_matrix)
     deallocate(row_norms)
     deallocate(sorted_atoms)
-end subroutine fgenerate_full_coulomb_matrix
+end subroutine fgenerate_triup_coulomb_matrix
 
 subroutine fgenerate_unsorted_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
 
