@@ -33,6 +33,7 @@ from ..representations import generate_full_coulomb_matrix
 from ..representations import generate_atomic_coulomb_matrix
 from ..representations import generate_bob
 from ..representations import generate_distance_bob
+from ..representations import generate_inv_square_bob
 from ..representations import generate_eigenvalue_coulomb_matrix
 from ..representations import generate_slatm
 
@@ -314,7 +315,39 @@ class Compound(object):
 
         self.representation = generate_distance_bob(self.nuclear_charges, self.coordinates, 
                 self.atomtypes, asize = asize)
+    
+    def generate_inv_square_bob(self, size=23, asize = {"O":3, "C":7, "N":3, "H":16, "S":1}):
+        """ Creates a Bag of Bonds (BOB) representation of a molecule.
+            The representation expands on the coulomb matrix representation.
+            For each element a bag (vector) is constructed for self interactions
+            (e.g. ('C', 'H', 'O')).
+            For each element pair a bag is constructed for interatomic interactions
+            (e.g. ('CC', 'CH', 'CO', 'HH', 'HO', 'OO')), sorted by value.
+            The self interaction of element :math:`I` is given by
 
+                :math:`\\tfrac{1}{2} Z_{I}^{2.4}`,
+
+            with :math:`Z_{i}` being the nuclear charge of element :math:`i`
+            The interaction between atom :math:`i` of element :math:`I` and 
+            atom :math:`j` of element :math:`J` is given by
+
+                :math:`\\Z_{I}Z_{J} * \\| {\\bf R}_{i} - {\\bf R}_{j}\\|`
+
+            with :math:`R_{i}` being the euclidean coordinate of atom :math:`i`.
+            The sorted bags are concatenated to an 1D vector representation.
+            The representation is calculated using an OpenMP parallel Fortran routine.
+
+            :param asize: The maximum number of atoms of each element type supported by the representation
+            :type size: dictionary
+
+            :return: 1D representation
+            :rtype: numpy array
+        """
+
+        self.representation = generate_inv_square_bob(self.nuclear_charges, self.coordinates, 
+                self.atomtypes, asize = asize)
+
+    
 
     def generate_fchl_representation(self, max_size = 23, cell=None, neighbors=24,cut_distance=5.0):
         """Generates the representation for the FCHL-kernel. Note that this representation is incompatible with generic ``qml.kernel.*`` kernels.
