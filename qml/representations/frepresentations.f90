@@ -181,7 +181,7 @@ subroutine fgenerate_full_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
     do i = 1, natoms
         pair_norm = 0.5d0 * atomic_charges(i) ** 2.4d0
         row_norms(i) = row_norms(i) + pair_norm * pair_norm
-        pair_distance_matrix(i, i) = pair_norm
+        pair_distance_matrix(i, i) = 0.0d0
     enddo
     !$OMP END PARALLEL DO
 
