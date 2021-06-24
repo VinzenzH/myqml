@@ -380,7 +380,7 @@ class Compound(object):
         self.representation = generate_inv_six_bob(self.nuclear_charges, self.coordinates, 
                 self.atomtypes, asize = asize)
 
-     def generate_morse_bob(self, size=23, asize = {"O":3, "C":7, "N":3, "H":16, "S":1}):
+    def generate_morse_bob(self, size=23, asize = {"O":3, "C":7, "N":3, "H":16, "S":1}):
         """ Creates a Bag of Bonds (BOB) representation of a molecule.
             The representation expands on the coulomb matrix representation.
             For each element a bag (vector) is constructed for self interactions
@@ -395,7 +395,7 @@ class Compound(object):
             The interaction between atom :math:`i` of element :math:`I` and 
             atom :math:`j` of element :math:`J` is given by
 
-                :math:`\\frac{Z_{I}Z_{J}}{\\| {\\bf R}_{i} - {\\bf R}_{j}\\|}`
+                :math:`\\Z_{I}Z_{J} * \\| {\\bf R}_{i} - {\\bf R}_{j}\\|`
 
             with :math:`R_{i}` being the euclidean coordinate of atom :math:`i`.
             The sorted bags are concatenated to an 1D vector representation.
@@ -410,7 +410,6 @@ class Compound(object):
 
         self.representation = generate_morse_bob(self.nuclear_charges, self.coordinates, 
                 self.atomtypes, asize = asize)
-    
 
     def generate_fchl_representation(self, max_size = 23, cell=None, neighbors=24,cut_distance=5.0):
         """Generates the representation for the FCHL-kernel. Note that this representation is incompatible with generic ``qml.kernel.*`` kernels.
