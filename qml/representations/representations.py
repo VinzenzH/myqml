@@ -35,6 +35,7 @@ from .frepresentations import fgenerate_bob
 from .frepresentations import fgenerate_distance_bob
 from .frepresentations import fgenerate_inv_square_bob
 from .frepresentations import fgenerate_inv_six_bob
+from .frepresentations import fgenerate_morse_bob
 
 from qml.utils import NUCLEAR_CHARGE
 
@@ -513,6 +514,54 @@ def generate_inv_six_bob(nuclear_charges, coordinates, atomtypes, size=23, asize
     n /= 2
 
     return fgenerate_inv_six_bob(nuclear_charges, coordinates, nuclear_charges, ids, nmax, n)
+
+def generate_morse_bob(nuclear_charges, coordinates, atomtypes, size=23, asize = {"O":3, "C":7, "N":3, "H":16, "S":1}):
+    """ Creates a Bag of Bonds (BOB) representation of a molecule.
+        The representation expands on the coulomb matrix representation.
+        For each element a bag (vector) is constructed for self interactions
+        (e.g. ('C', 'H', 'O')).
+        For each element pair a bag is constructed for interatomic interactions
+        (e.g. ('CC', 'CH', 'CO', 'HH', 'HO', 'OO')), sorted by value.
+        The self interaction of element :math:`I` is given by
+
+            :math:`\\tfrac{1}{2} Z_{I}^{2.4}`,
+
+        with :math:`Z_{i}` being the nuclear charge of element :math:`i`
+        The interaction between atom :math:`i` of element :math:`I` and 
+        atom :math:`j` of element :math:`J` is given by
+
+            :math:`\\Z_{I}Z_{J}\\ * |\\bf R}_{i} - {\\bf R}_{j}\\|`
+
+        with :math:`R_{i}` being the euclidean coordinate of atom :math:`i`.
+        The sorted bags are concatenated to an 1D vector representation.
+        The representation is calculated using an OpenMP parallel Fortran routine.
+
+        :param nuclear_charges: Nuclear charges of the atoms in the molecule
+        :type nuclear_charges: numpy array
+        :param coordinates: 3D Coordinates of the atoms in the molecule
+        :type coordinates: numpy array
+        :param size: The maximum number of atoms in the representation
+        :type size: integer
+        :param asize: The maximum number of atoms of each element type supported by the representation
+        :type asize: dictionary
+
+        :return: 1D representation
+        :rtype: numpy array
+    """
+
+    n = 0
+    atoms = sorted(asize, key=asize.get)
+    nmax = [asize[key] for key in atoms]
+    ids = np.zeros(len(nmax), dtype=int)
+    for i, (key, value) in enumerate(zip(atoms,nmax)):
+        n += value * (1+value)
+        ids[i] = NUCLEAR_CHARGE[key]
+        for j in range(i):
+            v = nmax[j]
+            n += 2 * value * v
+    n /= 2
+
+    return fgenerate_morse_bob(nuclear_charges, coordinates, nuclear_charges, ids, nmax, n)
 
 def get_slatm_mbtypes(nuclear_charges, pbc='000'):
     """
