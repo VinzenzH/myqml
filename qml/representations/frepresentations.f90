@@ -189,7 +189,7 @@ subroutine fgenerate_triup_coulomb_matrix(atomic_charges, coordinates, nmax, cm)
     do i = 1, natoms
         do j = i+1, natoms
             pair_norm = atomic_charges(i) * atomic_charges(j) &
-                & / sqrt(sum((coordinates(j,:) * 1.8897259886 - coordinates(i,:) * 1.8897259886)**2))
+                & / sqrt(sum((coordinates(j,:) - coordinates(i,:))**2))
 
             pair_distance_matrix(i, j) = pair_norm
             pair_distance_matrix(j, i) = pair_norm
